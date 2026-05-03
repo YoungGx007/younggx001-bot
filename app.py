@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 from flask import Flask, request, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.request_validator import RequestValidator
 import sqlite3
@@ -38,6 +39,9 @@ openrouter = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=OPENROUTER_
 
 # ── Flask App ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
+# Tells Flask to trust X-Forwarded-Proto/Host headers from Render's proxy
+# so request.url is https://... when Twilio validates the signature.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
